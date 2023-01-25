@@ -3,8 +3,9 @@ using BulkyBook.DataAccess.Repository.IRepository;
 using BulkyBook.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BulkyBookWeb.Controllers
+namespace BulkyBookWeb.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class CategoryController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -52,7 +53,7 @@ namespace BulkyBookWeb.Controllers
             //var categoryFromDb = _unitOfWork.Categories.Find(id);
             var categoryFromDbFirst = _unitOfWork.CategoryRepository.GetFirstOrDefault(u => u.Id == id);
             //var categoryFromDbSingle = _unitOfWork.Categories.SingleOrDefault(u => u.Id == id);
-            
+
             if (categoryFromDbFirst == null)
             {
                 return NotFound();
@@ -106,8 +107,8 @@ namespace BulkyBookWeb.Controllers
             {
                 return NotFound();
             }
-                _unitOfWork.CategoryRepository.Remove(obj);
-                _unitOfWork.Save();
+            _unitOfWork.CategoryRepository.Remove(obj);
+            _unitOfWork.Save();
             TempData["success"] = "Category deleted successfully";
             return RedirectToAction("Index");
         }
