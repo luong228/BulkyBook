@@ -27,7 +27,7 @@ namespace BulkyBook.DataAccess.Repository
             var orderFromDb = _db.OrderHeaders.FirstOrDefault(u => u.Id == id);
             if (orderFromDb != null)
             {
-                orderFromDb.Status = OrderStatus;
+                orderFromDb.OrderStatus = OrderStatus;
                 if (PaymentStatus != null)
                 {
                     orderFromDb.PaymentStatus = PaymentStatus;
