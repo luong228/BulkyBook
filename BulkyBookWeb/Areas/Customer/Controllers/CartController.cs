@@ -150,7 +150,25 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 		public IActionResult OrderConfirmation(int id)
 		{
 			OrderHeader orderHeader = _unitOfWork.OrderHeaderRepository.GetFirstOrDefault(u => u.Id == id);
+			if (orderHeader == null)
+			{
+				return View(id);
+			}
+			var service = new SessionService();
+			Session session = service.Get(orderHeader.SessionId);
 			// Check the stripe status
+			if(session.PaymentStatus.ToLower() == "paid")
+			{
+				_unitOfWork.OrderHeaderRepository.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
+				//_unitOfWork.Save();
+			}
+			List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCartRepository.GetAll(
+				u => u.ApplicationUserId == orderHeader.ApplicationUserId
+				).ToList();
+			_unitOfWork.ShoppingCartRepository.RemoveRange(shoppingCarts);
+			_unitOfWork.Save();
+
+			return View(id);
 		}
 		public IActionResult Plus(int cartId)
 		{
