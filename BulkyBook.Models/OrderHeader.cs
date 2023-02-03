@@ -19,7 +19,7 @@ namespace BulkyBook.Models
 		public ApplicationUser ApplicationUser { get; set; }
 		[Required]
 		public DateTime OrderDate { get; set; }
-		public DateTime ShoppingDate { get;  set; }
+		public DateTime ShippingDate { get;  set; }
 		public double OrderTotal { get; set; }
 		public string? OrderStatus { get; set; }
 		public string? PaymentStatus { get; set; }
