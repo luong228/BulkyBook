@@ -3,6 +3,7 @@ using BulkyBook.Models;
 using BulkyBook.Models.ViewModels;
 using BulkyBook.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Stripe.Checkout;
 using System.Security.Claims;
@@ -14,11 +15,13 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 	public class CartController : Controller
 	{
 		private readonly IUnitOfWork _unitOfWork;
+		private readonly IEmailSender _emailSender;
 		[BindProperty]
 		public ShoppingCartVM ShoppingCartVM { get; set; }
-		public CartController(IUnitOfWork unitOfWork)
+		public CartController(IUnitOfWork unitOfWork, IEmailSender emailSender)
 		{
 			_unitOfWork = unitOfWork;
+			_emailSender = emailSender;
 		}
 		//[AllowAnonymous] - make this action method can be accessed by a user that is not authorized
 		public IActionResult Index()
@@ -169,7 +172,7 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 		}
 		public IActionResult OrderConfirmation(int id)
 		{
-			OrderHeader orderHeader = _unitOfWork.OrderHeaderRepository.GetFirstOrDefault(u => u.Id == id);
+			OrderHeader orderHeader = _unitOfWork.OrderHeaderRepository.GetFirstOrDefault(u => u.Id == id, includeProperties: "ApplicationUser");
 
 			if (orderHeader == null)
 			{
@@ -191,7 +194,7 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 			{
                 orderHeader.PaymentDueDate = DateTime.Now.AddDays(30);
             }
-			
+			_emailSender.SendEmailAsync(orderHeader.ApplicationUser.Email, "New Order - Bulky Book", "<p> New Order Created</p>");
 			List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCartRepository.GetAll(
 				u => u.ApplicationUserId == orderHeader.ApplicationUserId
 				).ToList();
@@ -213,7 +216,10 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 			if (cart.Count <= 1)
 			{
 				_unitOfWork.ShoppingCartRepository.Remove(cart);
-			}
+                HttpContext.Session.SetInt32(SD.SessionCart,
+                    _unitOfWork.ShoppingCartRepository.GetAll(u => u.ApplicationUserId ==
+                        cart.ApplicationUserId).ToList().Count - 1);
+            }
 			else
 			{
 				_unitOfWork.ShoppingCartRepository.DecrementCount(cart, 1);
@@ -225,7 +231,10 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 		{
 			var cart = _unitOfWork.ShoppingCartRepository.GetFirstOrDefault(u => u.Id == cartId);
 			_unitOfWork.ShoppingCartRepository.Remove(cart);
-			_unitOfWork.Save();
+            HttpContext.Session.SetInt32(SD.SessionCart,
+                    _unitOfWork.ShoppingCartRepository.GetAll(u => u.ApplicationUserId ==
+						cart.ApplicationUserId).ToList().Count -1);
+            _unitOfWork.Save();
 			return RedirectToAction(nameof(Index));
 		}
 		private double GetPriceBasedOnQuantity(double quantity, double price, double price50, double price100)
