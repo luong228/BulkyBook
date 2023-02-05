@@ -110,6 +110,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
             public string ConfirmPassword { get; set; }
             [Required]
             public string Name { get; set; }
+            #nullable enable
             public string? StreetAddress { get; set; }
             public string? City { get; set; }
             public string? State { get; set; }
